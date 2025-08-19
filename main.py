@@ -3,8 +3,9 @@ from langchain.prompts import ChatPromptTemplate
 import os
 from dotenv import load_dotenv
 load_dotenv()
-
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 llm = ChatGroq(
+        api_key=GROQ_API_KEY,
         model_name='llama3-70b-8192'
 )
 
