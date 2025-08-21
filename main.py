@@ -5,15 +5,15 @@ from langchain_groq import ChatGroq
 from langchain.prompts import ChatPromptTemplate
 from dotenv import load_dotenv
 load_dotenv()
-def get_llm(api_key):
+def get_llm(api_key,model_name):
     return ChatGroq(
         api_key=api_key,
-        model_name='llama3-70b-8192'
+        model_name=model_name #'llama3-70b-8192'
     )
 
 
-def findStakeholder(problem_statement,api_key):
-    llm = get_llm(api_key)
+def findStakeholder(problem_statement,api_key,model_name):
+    llm = get_llm(api_key,model_name)
     prompt = ChatPromptTemplate.from_template("""
     ## Introduction:
     Imagine you are a **requirement analyst** working on defining stakeholders and end users for the given problem statement. Your goal is to identify all individuals or groups who interact with or are impacted by this system.
@@ -61,8 +61,8 @@ def findStakeholder(problem_statement,api_key):
     print(stakeholders_response)
     return stakeholders_response
 
-def generateElicitationTechniques(Stakeholder,api_key):
-    llm = get_llm(api_key)
+def generateElicitationTechniques(Stakeholder,api_key,model_name):
+    llm = get_llm(api_key,model_name)
     # Define a well-structured prompt for elicitation techniques
     prompt = ChatPromptTemplate.from_template(f"""
     ## **Introduction:**
@@ -111,8 +111,8 @@ def generateElicitationTechniques(Stakeholder,api_key):
     return elicitation_techniques_response
 
 
-def justificationElicitationTechnique(ElicitationTechnique,api_key):
-    llm = get_llm(api_key)
+def justificationElicitationTechnique(ElicitationTechnique,api_key,model_name):
+    llm = get_llm(api_key,model_name)
     # Define a refined prompt
     prompt = ChatPromptTemplate.from_template(f"""
     ## **Introduction:**
@@ -159,8 +159,8 @@ def justificationElicitationTechnique(ElicitationTechnique,api_key):
     return Elicitationjustification
 
 
-def generateUserStories(Stakeholder,api_key):
-    llm = get_llm(api_key)
+def generateUserStories(Stakeholder,api_key,model_name):
+    llm = get_llm(api_key,model_name)
     # Define the improved prompt
     prompt = ChatPromptTemplate.from_template(f"""
     ## **Introduction:**
@@ -213,8 +213,8 @@ def generateUserStories(Stakeholder,api_key):
     return user_stories
 
 
-def checkInvestFramework(user_stories,api_key):
-    llm = get_llm(api_key)
+def checkInvestFramework(user_stories,api_key,model_name):
+    llm = get_llm(api_key,model_name)
     prompt = ChatPromptTemplate.from_template(f"""
     ## **Introduction:**
     You are an **Agile Coach & Requirements Analyst**, responsible for **validating the user stories** using the **INVEST framework**. Your goal is to ensure that each user story meets agile best practices and is ready for development.
@@ -279,8 +279,8 @@ def checkInvestFramework(user_stories,api_key):
     return invest_validations
 
 
-def Prioritize(final_validated_output,api_key):
-    llm = get_llm(api_key)
+def Prioritize(final_validated_output,api_key,model_name):
+    llm = get_llm(api_key,model_name)
     prompt = ChatPromptTemplate.from_template(f"""
     Introduction:
     Act as an Agile Coach & Requirements Analyst. Your task is to analyze and categorize the validated user stories using the MoSCoW prioritization method.
@@ -370,8 +370,8 @@ def Prioritize(final_validated_output,api_key):
     return prioritize
 
 
-def findEpicConflict(final_validated_output,api_key):
-    llm = get_llm(api_key)
+def findEpicConflict(final_validated_output,api_key,model_name):
+    llm = get_llm(api_key,model_name)
     prompt = ChatPromptTemplate.from_template(f"""
 
     ### Validated User Stories:

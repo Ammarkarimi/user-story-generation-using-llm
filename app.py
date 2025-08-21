@@ -1,4 +1,3 @@
-# app.py
 import streamlit as st
 import re
 import uuid
@@ -15,6 +14,7 @@ from main import (
 from sqlalchemy import create_engine, Column, Integer, String, Text, DateTime
 from sqlalchemy.orm import declarative_base, sessionmaker
 from datetime import datetime
+import re
 
 # Get DB values from Streamlit secrets
 DB_USER = st.secrets["user"]
@@ -33,6 +33,8 @@ class UserLog(Base):
     __tablename__ = "logs"
     id = Column(Integer, primary_key=True, autoincrement=True)
     user_id = Column(String)
+    student_id = Column(String)   # new column
+    model_name = Column(String)   # new column
     action = Column(String)
     details = Column(Text)
     timestamp = Column(DateTime, default=datetime.utcnow)
@@ -43,9 +45,15 @@ Base.metadata.create_all(engine)
 Session = sessionmaker(bind=engine)
 
 def log_event(user_id, action, details):
-    """Store user actions in Supabase logs table."""
+    """Store user actions in Supabase logs table with student_id & model_name."""
     session = Session()
-    log = UserLog(user_id=user_id, action=action, details=str(details))
+    log = UserLog(
+        user_id=user_id,
+        student_id=st.session_state.get("student_id", "unknown"),
+        model_name=st.session_state.get("model_name", "default"),
+        action=action,
+        details=str(details)
+    )
     session.add(log)
     session.commit()
     session.close()
@@ -57,6 +65,7 @@ def get_logs(limit=20):
     session.close()
     return logs
 
+regex_pattern = r'<think>[\s\S]*?</think>\n\n'
 # ---------------------------
 # Streamlit Page Setup
 # ---------------------------
@@ -74,9 +83,18 @@ def validate_groq_api_key(api_key: str) -> bool:
     return bool(re.match(pattern, api_key))
 
 # ---------------------------
-# Sidebar: API Key Input
+# Sidebar: User Info + API Key
 # ---------------------------
 st.sidebar.header("🔑 API Key Configuration")
+
+# New sidebar fields for student_id and model_name
+st.sidebar.subheader("👤 User Info")
+st.session_state["student_id"] = st.sidebar.text_input("Student ID", value=st.session_state.get("student_id", ""))
+st.sidebar.selectbox(
+    "Select Model:",
+    ["llama3-70b-8192", "openai/gpt-oss-120b", "deepseek-r1-distill-llama-70b"],
+    key="model_name"
+)
 
 st.sidebar.info(
     "Don’t have a GROQ API key yet? You can create one by visiting "
@@ -108,8 +126,10 @@ if api_key:
 
         if st.button("🔍 Analyze Stakeholders"):
             with st.spinner("Identifying stakeholders..."):
-                stakeholders = findStakeholder(problem_statement, st.session_state["api_key"])
+                stakeholders = findStakeholder(problem_statement, st.session_state["api_key"], st.session_state["model_name"])
             st.subheader("👥 Stakeholders & End Users")
+            if st.session_state["model_name"]=="deepseek-r1-distill-llama-70b":
+                stakeholders = re.sub(regex_pattern, '', stakeholders)
             st.write(stakeholders)
             st.session_state["stakeholders"] = stakeholders
             log_event(st.session_state["user_id"], "analyze_stakeholders", {"problem": problem_statement, "result": stakeholders})
@@ -119,9 +139,11 @@ if api_key:
             if st.button("📋 Generate Elicitation Techniques"):
                 with st.spinner("Generating elicitation techniques..."):
                     elicitation = generateElicitationTechniques(
-                        st.session_state["stakeholders"], st.session_state["api_key"]
+                        st.session_state["stakeholders"], st.session_state["api_key"], st.session_state["model_name"]
                     )
                 st.subheader("🛠️ Elicitation Techniques")
+                if st.session_state["model_name"]=="deepseek-r1-distill-llama-70b":
+                    elicitation=re.sub(regex_pattern, '', elicitation)
                 st.write(elicitation)
                 st.session_state["elicitation"] = elicitation
                 log_event(st.session_state["user_id"], "generate_elicitation", {"result": elicitation})
@@ -131,9 +153,11 @@ if api_key:
             if st.button("✅ Justify Elicitation Techniques"):
                 with st.spinner("Justifying elicitation techniques..."):
                     justification = justificationElicitationTechnique(
-                        st.session_state["elicitation"], st.session_state["api_key"]
+                        st.session_state["elicitation"], st.session_state["api_key"], st.session_state["model_name"]
                     )
                 st.subheader("📖 Justification for Techniques")
+                if st.session_state["model_name"]=="deepseek-r1-distill-llama-70b":
+                    justification=re.sub(regex_pattern, '', justification)
                 st.write(justification)
                 st.session_state["justification"] = justification
                 log_event(st.session_state["user_id"], "justify_elicitation", {"result": justification})
@@ -143,9 +167,11 @@ if api_key:
             if st.button("📝 Generate User Stories"):
                 with st.spinner("Generating user stories..."):
                     user_stories = generateUserStories(
-                        st.session_state["stakeholders"], st.session_state["api_key"]
+                        st.session_state["stakeholders"], st.session_state["api_key"], st.session_state["model_name"]
                     )
                 st.subheader("📘 User Stories")
+                if st.session_state["model_name"]=="deepseek-r1-distill-llama-70b":
+                    user_stories=re.sub(regex_pattern, '', user_stories)
                 st.write(user_stories)
                 st.session_state["user_stories"] = user_stories
                 log_event(st.session_state["user_id"], "generate_user_stories", {"result": user_stories})
@@ -155,9 +181,11 @@ if api_key:
             if st.button("🔎 Validate with INVEST"):
                 with st.spinner("Validating with INVEST framework..."):
                     invest = checkInvestFramework(
-                        st.session_state["user_stories"], st.session_state["api_key"]
+                        st.session_state["user_stories"], st.session_state["api_key"],st.session_state["model_name"]
                     )
                 st.subheader("✅ INVEST Validation Results")
+                if st.session_state["model_name"]=="deepseek-r1-distill-llama-70b":
+                    invest = re.sub(regex_pattern, '', invest)
                 st.write(invest)
                 st.session_state["invest"] = invest
                 log_event(st.session_state["user_id"], "invest_validation", {"result": invest})
@@ -167,9 +195,11 @@ if api_key:
             if st.button("📊 Prioritize with MoSCoW"):
                 with st.spinner("Prioritizing user stories..."):
                     prioritize = Prioritize(
-                        st.session_state["invest"], st.session_state["api_key"]
+                        st.session_state["invest"], st.session_state["api_key"],st.session_state["model_name"]
                     )
                 st.subheader("📌 MoSCoW Prioritization")
+                if st.session_state["model_name"]=="deepseek-r1-distill-llama-70b":
+                    prioritize = re.sub(regex_pattern, '', prioritize)
                 st.write(prioritize)
                 st.session_state["prioritize"] = prioritize
                 log_event(st.session_state["user_id"], "prioritize", {"result": prioritize})
@@ -179,17 +209,19 @@ if api_key:
             if st.button("⚡ Identify Epic Conflicts"):
                 with st.spinner("Analyzing conflicts across EPICs..."):
                     conflicts = findEpicConflict(
-                        st.session_state["invest"], st.session_state["api_key"]
+                        st.session_state["invest"], st.session_state["api_key"],st.session_state["model_name"]
                     )
                 st.subheader("⚔️ EPIC Conflicts & Resolutions")
+                if st.session_state["model_name"]=="deepseek-r1-distill-llama-70b":
+                    conflicts = re.sub(regex_pattern, '', conflicts)
                 st.write(conflicts)
                 st.session_state["conflicts"] = conflicts
                 log_event(st.session_state["user_id"], "epic_conflicts", {"result": conflicts})
 
         # Admin: View Logs (optional, at bottom of sidebar)
-        with st.sidebar.expander("📜 View Recent Logs"):
-            for log in get_logs(10):
-                st.write(f"[{log.timestamp}] {log.action}: {log.details}")
+        # with st.sidebar.expander("📜 View Recent Logs"):
+        #     for log in get_logs(10):
+        #         st.write(f"[{log.timestamp}] {log.student_id} | {log.model_name} | {log.action}: {log.details}")
 
     else:
         st.error("❌ Invalid API key format. Must start with `gsk_` and contain 40–60 alphanumeric characters.")
