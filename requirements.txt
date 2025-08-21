@@ -2,3 +2,5 @@ langchain
 langchain-groq
 python-dotenv
 streamlit
+sqlalchemy
+psycopg2-binary
