@@ -87,14 +87,32 @@ def validate_groq_api_key(api_key: str) -> bool:
 # ---------------------------
 st.sidebar.header("🔑 API Key Configuration")
 
-# New sidebar fields for student_id and model_name
+# Initialize model lock state
+if "lock_model" not in st.session_state:
+    st.session_state.lock_model = False
+if "epic_done" not in st.session_state:
+    st.session_state.epic_done = False
+
+# Student ID
 st.sidebar.subheader("👤 User Info")
-st.session_state["student_id"] = st.sidebar.text_input("Student ID", value=st.session_state.get("student_id", ""))
-st.sidebar.selectbox(
-    "Select Model:",
-    ["llama3-70b-8192", "openai/gpt-oss-120b", "deepseek-r1-distill-llama-70b"],
-    key="model_name"
+st.session_state["student_id"] = st.sidebar.text_input(
+    "Student ID", value=st.session_state.get("student_id", "")
 )
+
+# Model dropdown (locked after first selection until epic is completed)
+model_options = ["llama3-70b-8192", "openai/gpt-oss-120b", "deepseek-r1-distill-llama-70b"]
+
+selected_model = st.sidebar.selectbox(
+    "Select Model:",
+    model_options,
+    index=model_options.index(st.session_state.get("model_name", model_options[0])),
+    key="model_name",
+    disabled=st.session_state.lock_model
+)
+
+# Lock model once selected (if not already locked)
+if st.session_state["model_name"] and not st.session_state.lock_model:
+    st.session_state.lock_model = True
 
 st.sidebar.info(
     "Don’t have a GROQ API key yet? You can create one by visiting "
@@ -209,14 +227,19 @@ if api_key:
             if st.button("⚡ Identify Epic Conflicts"):
                 with st.spinner("Analyzing conflicts across EPICs..."):
                     conflicts = findEpicConflict(
-                        st.session_state["invest"], st.session_state["api_key"],st.session_state["model_name"]
+                        st.session_state["invest"], st.session_state["api_key"], st.session_state["model_name"]
                     )
                 st.subheader("⚔️ EPIC Conflicts & Resolutions")
-                if st.session_state["model_name"]=="deepseek-r1-distill-llama-70b":
+                if st.session_state["model_name"] == "deepseek-r1-distill-llama-70b":
                     conflicts = re.sub(regex_pattern, '', conflicts)
                 st.write(conflicts)
                 st.session_state["conflicts"] = conflicts
                 log_event(st.session_state["user_id"], "epic_conflicts", {"result": conflicts})
+
+                # ✅ Unlock model after epic is shown
+                st.session_state.lock_model = False
+                st.session_state.epic_done = True
+
 
         # Admin: View Logs (optional, at bottom of sidebar)
         # with st.sidebar.expander("📜 View Recent Logs"):
