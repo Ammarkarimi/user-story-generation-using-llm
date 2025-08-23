@@ -65,7 +65,7 @@ def get_logs(limit=20):
     session.close()
     return logs
 
-
+regex_pattern = r'<think>[\s\S]*?</think>\n\n'
 # ---------------------------
 # Streamlit Page Setup
 # ---------------------------
@@ -100,7 +100,7 @@ st.session_state["student_id"] = st.sidebar.text_input(
 )
 
 # Model dropdown (locked after first selection until epic is completed)
-model_options = ["llama3-70b-8192", "openai/gpt-oss-120b", "llama-3.3-70b-versatile"]
+model_options = ["qwen/qwen3-32b", "openai/gpt-oss-120b", "llama-3.3-70b-versatile"]
 
 selected_model = st.sidebar.selectbox(
     "Select Model:",
@@ -146,6 +146,8 @@ if api_key:
             with st.spinner("Identifying stakeholders..."):
                 stakeholders = findStakeholder(problem_statement, st.session_state["api_key"], st.session_state["model_name"])
             st.subheader("👥 Stakeholders & End Users")
+            if st.session_state["model_name"]=="qwen/qwen3-32b":
+                stakeholders = re.sub(regex_pattern, '', stakeholders)
             st.write(stakeholders)
             st.session_state["stakeholders"] = stakeholders
             log_event(st.session_state["user_id"], "analyze_stakeholders", {"problem": problem_statement, "result": stakeholders})
@@ -158,6 +160,8 @@ if api_key:
                         st.session_state["stakeholders"], st.session_state["api_key"], st.session_state["model_name"]
                     )
                 st.subheader("🛠️ Elicitation Techniques")
+                if st.session_state["model_name"]=="qwen/qwen3-32b":
+                    elicitation=re.sub(regex_pattern, '', elicitation)
                 st.write(elicitation)
                 st.session_state["elicitation"] = elicitation
                 log_event(st.session_state["user_id"], "generate_elicitation", {"result": elicitation})
@@ -170,6 +174,8 @@ if api_key:
                         st.session_state["elicitation"], st.session_state["api_key"], st.session_state["model_name"]
                     )
                 st.subheader("📖 Justification for Techniques")
+                if st.session_state["model_name"]=="qwen/qwen3-32b":
+                    justification=re.sub(regex_pattern, '', justification)
                 st.write(justification)
                 st.session_state["justification"] = justification
                 log_event(st.session_state["user_id"], "justify_elicitation", {"result": justification})
@@ -182,6 +188,8 @@ if api_key:
                         st.session_state["stakeholders"], st.session_state["api_key"], st.session_state["model_name"]
                     )
                 st.subheader("📘 User Stories")
+                if st.session_state["model_name"]=="qwen/qwen3-32b":
+                    user_stories=re.sub(regex_pattern, '', user_stories)
                 st.write(user_stories)
                 st.session_state["user_stories"] = user_stories
                 log_event(st.session_state["user_id"], "generate_user_stories", {"result": user_stories})
@@ -194,6 +202,8 @@ if api_key:
                         st.session_state["user_stories"], st.session_state["api_key"],st.session_state["model_name"]
                     )
                 st.subheader("✅ INVEST Validation Results")
+                if st.session_state["model_name"]=="qwen/qwen3-32b":
+                    invest = re.sub(regex_pattern, '', invest)
                 st.write(invest)
                 st.session_state["invest"] = invest
                 log_event(st.session_state["user_id"], "invest_validation", {"result": invest})
@@ -206,6 +216,8 @@ if api_key:
                         st.session_state["invest"], st.session_state["api_key"],st.session_state["model_name"]
                     )
                 st.subheader("📌 MoSCoW Prioritization")
+                if st.session_state["model_name"]=="qwen/qwen3-32b":
+                    prioritize = re.sub(regex_pattern, '', prioritize)
                 st.write(prioritize)
                 st.session_state["prioritize"] = prioritize
                 log_event(st.session_state["user_id"], "prioritize", {"result": prioritize})
@@ -218,6 +230,8 @@ if api_key:
                         st.session_state["invest"], st.session_state["api_key"], st.session_state["model_name"]
                     )
                 st.subheader("⚔️ EPIC Conflicts & Resolutions")
+                if st.session_state["model_name"] == "qwen/qwen3-32b":
+                    conflicts = re.sub(regex_pattern, '', conflicts)
                 st.write(conflicts)
                 st.session_state["conflicts"] = conflicts
                 log_event(st.session_state["user_id"], "epic_conflicts", {"result": conflicts})
