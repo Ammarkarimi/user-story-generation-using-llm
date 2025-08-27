@@ -58,12 +58,12 @@ def log_event(user_id, action, details):
     session.commit()
     session.close()
 
-def get_logs(limit=20):
-    """Retrieve recent logs for debugging or admin view."""
-    session = Session()
-    logs = session.query(UserLog).order_by(UserLog.timestamp.desc()).limit(limit).all()
-    session.close()
-    return logs
+# def get_logs(limit=20):
+#     """Retrieve recent logs for debugging or admin view."""
+#     session = Session()
+#     logs = session.query(UserLog).order_by(UserLog.timestamp.desc()).limit(limit).all()
+#     session.close()
+#     return logs
 
 regex_pattern = r'<think>[\s\S]*?</think>\n\n'
 # ---------------------------
