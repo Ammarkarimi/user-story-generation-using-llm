@@ -1,8 +1,7 @@
 from langchain_groq import ChatGroq
-from langchain.prompts import ChatPromptTemplate
+from langchain_core.prompts import ChatPromptTemplate
 import os
 from langchain_groq import ChatGroq
-from langchain.prompts import ChatPromptTemplate
 from dotenv import load_dotenv
 load_dotenv()
 def get_llm(api_key,model_name):
