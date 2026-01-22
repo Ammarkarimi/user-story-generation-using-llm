@@ -107,7 +107,7 @@ Lab_Experiment/
 
 ```bash
 # 1. Clone/navigate to the project
-cd c:\Data\Lab_Experiment
+cd Lab_Experiment
 
 # 2. Install dependencies
 pip install -r requirements.txt
@@ -254,3 +254,4 @@ Mail Ids:
 
 **Last Updated**: January 2026
 **Status**: Active Research & Development
+
